@@ -37,7 +37,10 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'deadline' => 'nullable|date',
             // 'user_id' is only required if the person submitting is an admin
-            'user_id' => 'required_if:Auth::user()->isAdmin(),true|exists:users,id'
+            'user_id' => 'required_if:Auth::user()->isAdmin(),true|exists:users,id',
+            // Add validation for the new fields
+            'category' => 'required|in:Work,Personal,Other',
+            'priority' => 'required|in:Low,Medium,High',
         ]);
 
         // If the logged-in user is an admin, they can assign the task to anyone.
@@ -46,6 +49,8 @@ class TaskController extends Controller
         if (!Auth::user()->isAdmin()) {
             $taskData['user_id'] = Auth::id();
         }
+        // Set a default status for new tasks
+        $taskData['status'] = 'Pending';
 
         Task::create($taskData);
 
@@ -55,16 +60,24 @@ class TaskController extends Controller
     /**
      * Update the specified task's status.
      */
-    public function update(Task $task)
+    /**
+     * Update the specified task's status.
+     */
+    public function updateStatus(Request $request, Task $task)
     {
-        // Authorization: Admin can update any task.
-        // A team member can only update their own tasks.
-        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+        // Authorization
+        $user = Auth::user();
+        if (!($user && $user->isAdmin()) && Auth::id() !== $task->user_id) {
             abort(403);
         }
 
-        $task->update(['status' => 'completed']);
-        return redirect()->route('dashboard')->with('success', 'Task marked as completed!');
+        $validated = $request->validate([
+            'status' => 'required|in:Pending,In Progress,Completed',
+        ]);
+
+        $task->update(['status' => $validated['status']]);
+
+        return redirect()->route('dashboard')->with('success', 'Task status updated!');
     }
 
     /**

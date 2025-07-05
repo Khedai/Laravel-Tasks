@@ -20,7 +20,9 @@ class Task extends Model
         'description',
         'deadline',
         'status',
-        'user_id', // allow mass assignment of user_id
+        'category', // <-- ADD THIS
+        'priority', // <-- ADD THIS
+        'user_id',
     ];
 
     /**

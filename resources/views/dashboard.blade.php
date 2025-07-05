@@ -1,6 +1,6 @@
 <x-bootstrap-app-layout>
     <x-slot name="header">
-        <h1 class="h3 mb-0 text-gray-800">My Tasks</h1>
+        <h1 class="h3 mb-0 text-gray-800"> Tasks</h1>
     </x-slot>
 
     <!-- Success Message Alert -->
@@ -14,14 +14,14 @@
     <!-- Button to trigger the modal -->
     <div class="d-flex justify-content-end mb-4">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
-            Create New Task
+            + New Task
         </button>
     </div>
 
     <!-- Task List -->
     <div class="card shadow-sm">
         <div class="card-body">
-            <h2 class="card-title h4 mb-4">Your Tasks</h2>
+            <h2 class="card-title h4 mb-4">Tasks</h2>
             <div class="list-group">
                 @forelse ($tasks as $task)
                     <div class="list-group-item list-group-item-action">
@@ -29,7 +29,16 @@
                             <div>
                                 <h5 class="mb-1 fw-bold">{{ $task->title }}</h5>
                                 <p class="mb-1 text-muted">{{ $task->description }}</p>
-                                <!-- Display Assignee -->
+                                <div class="mb-1">
+                                    <span class="badge bg-secondary me-1">Category: {{ $task->category }}</span>
+                                    <span class="badge me-1
+                                        @if($task->priority == 'High') bg-danger
+                                        @elseif($task->priority == 'Medium') bg-warning text-dark
+                                        @else bg-success
+                                        @endif
+                                    ">Priority: {{ $task->priority }}</span>
+                                    <span class="badge bg-info text-dark">Status: {{ $task->status }}</span>
+                                </div>
                                 <p class="mb-1">
                                     <small class="fw-bold">Assigned to: {{ $task->user->name ?? 'N/A' }}</small>
                                 </p>
@@ -38,28 +47,36 @@
                                 @endif
                             </div>
                             <div class="d-flex flex-column align-items-end">
-                                <span class="badge rounded-pill mb-2 {{ $task->status == 'completed' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                @if ($task->status == 'completed')
-                                    Successful
+                                <!-- Status Update Dropdown (Admins & Assignees) -->
+                                @if (Auth::user()->isAdmin() || Auth::id() === $task->user_id)
+                                    <form method="POST" action="{{ route('tasks.update.status', $task) }}" class="mb-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="status" class="form-select form-select-sm mb-1" onchange="this.form.submit()">
+                                            <option value="Pending" @if($task->status == 'Pending') selected @endif>Pending</option>
+                                            <option value="In Progress" @if($task->status == 'In Progress') selected @endif>In Progress</option>
+                                            <option value="Completed" @if($task->status == 'Completed') selected @endif>Completed</option>
+                                        </select>
+                                    </form>
                                 @else
-                                    Pending
+                                    <span class="badge rounded-pill mb-2
+                                        @if($task->status == 'Completed') bg-success
+                                        @elseif($task->status == 'In Progress') bg-primary
+                                        @else bg-warning text-dark
+                                        @endif
+                                    ">
+                                        {{ $task->status }}
+                                    </span>
                                 @endif
-                            </span>
                                 <div class="btn-group" role="group">
-                                    @if ($task->status == 'pending')
-                                        <!-- Mark as Complete Button -->
-                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="me-2">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
-                                        </form>
-                                    @endif
-                                    <!-- Delete Button -->
+                                    <!-- Delete Button (Admins or Assignee) -->
+                                    @if (Auth::user()->isAdmin() || Auth::id() === $task->user_id)
                                     <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Are you sure?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -98,6 +115,26 @@
                         <div class="mb-3">
                             <label for="deadline" class="form-label">Deadline (Optional)</label>
                             <input type="date" class="form-control" name="deadline" id="deadline">
+                        </div>
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" name="category" id="category" required>
+                                <option value="" disabled selected>Select a Category</option>
+                                <option value="Work">Work</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select class="form-select" name="priority" id="priority" required>
+                                <option value="" disabled selected>Select Priority</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                            </select>
                         </div>
                         @if (Auth::user()->isAdmin())
                             <div class="mb-3">
