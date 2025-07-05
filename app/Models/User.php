@@ -26,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // <-- ADD THIS
     ];
 
     /**
@@ -50,7 +51,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-     public function tasks(): HasMany
+    /**
+     * Check if the user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Get the tasks for the user.
+     */
+    public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }

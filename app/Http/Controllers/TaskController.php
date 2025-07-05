@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,11 +14,17 @@ class TaskController extends Controller
      */
     public function index()
     {
-        // Get the logged-in user's tasks, ordered by the newest first
-        $tasks = Auth::user()->tasks()->latest()->get();
+        // Fetch all tasks, eager-loading the assigned user's name
+        $tasks = Task::with('user')->latest()->get();
 
-        // Pass the tasks to the dashboard view
-        return view('dashboard', ['tasks' => $tasks]);
+        // Fetch all users to populate the "assign to" dropdown for admins
+        $users = User::orderBy('name')->get();
+
+        // Pass tasks AND users to the dashboard view
+        return view('dashboard', [
+            'tasks' => $tasks,
+            'users' => $users
+        ]);
     }
 
     /**
@@ -25,17 +32,23 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request data
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'deadline' => 'nullable|date',
+            // 'user_id' is only required if the person submitting is an admin
+            'user_id' => 'required_if:Auth::user()->isAdmin(),true|exists:users,id'
         ]);
 
-        // Create the task and associate it with the logged-in user
-        Auth::user()->tasks()->create($validated);
+        // If the logged-in user is an admin, they can assign the task to anyone.
+        // Otherwise, the task is assigned to the logged-in user.
+        $taskData = $validated;
+        if (!Auth::user()->isAdmin()) {
+            $taskData['user_id'] = Auth::id();
+        }
 
-        // Redirect back to the dashboard with a success message
+        Task::create($taskData);
+
         return redirect()->route('dashboard')->with('success', 'Task created successfully!');
     }
 
@@ -44,13 +57,13 @@ class TaskController extends Controller
      */
     public function update(Task $task)
     {
-        // Authorization: Make sure the logged-in user owns this task
-        if (Auth::id() !== $task->user_id) {
-            abort(403); // Forbidden
+        // Authorization: Admin can update any task.
+        // A team member can only update their own tasks.
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
         }
 
         $task->update(['status' => 'completed']);
-
         return redirect()->route('dashboard')->with('success', 'Task marked as completed!');
     }
 
@@ -59,13 +72,13 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        // Authorization: Make sure the logged-in user owns this task
-        if (Auth::id() !== $task->user_id) {
-            abort(403); // Forbidden
+        // Authorization: Admin can delete any task.
+        // A team member can only delete their own tasks.
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
         }
 
         $task->delete();
-
         return redirect()->route('dashboard')->with('success', 'Task deleted successfully!');
     }
 }
