@@ -29,14 +29,22 @@
                             <div>
                                 <h5 class="mb-1 fw-bold">{{ $task->title }}</h5>
                                 <p class="mb-1 text-muted">{{ $task->description }}</p>
+                                <!-- Display Assignee -->
+                                <p class="mb-1">
+                                    <small class="fw-bold">Assigned to: {{ $task->user->name ?? 'N/A' }}</small>
+                                </p>
                                 @if ($task->deadline)
                                     <small class="text-secondary">Deadline: {{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}</small>
                                 @endif
                             </div>
                             <div class="d-flex flex-column align-items-end">
                                 <span class="badge rounded-pill mb-2 {{ $task->status == 'completed' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                    {{ ucfirst($task->status) }}
-                                </span>
+                                @if ($task->status == 'completed')
+                                    Successful
+                                @else
+                                    Pending
+                                @endif
+                            </span>
                                 <div class="btn-group" role="group">
                                     @if ($task->status == 'pending')
                                         <!-- Mark as Complete Button -->
@@ -91,6 +99,17 @@
                             <label for="deadline" class="form-label">Deadline (Optional)</label>
                             <input type="date" class="form-control" name="deadline" id="deadline">
                         </div>
+                        @if (Auth::user()->isAdmin())
+                            <div class="mb-3">
+                                <label for="user_id" class="form-label">Assign To</label>
+                                <select class="form-select" name="user_id" id="user_id" required>
+                                    <option value="" disabled selected>Select a Team Member</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
