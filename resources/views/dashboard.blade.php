@@ -1,91 +1,103 @@
-<x-app-layout>
+<x-bootstrap-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('My Tasks') }}
-        </h2>
+        <h1 class="h3 mb-0 text-gray-800">My Tasks</h1>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Success Message -->
-            @if (session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                    <strong class="font-bold">Success!</strong>
-                    <span class="block sm:inline">{{ session('success') }}</span>
-                </div>
-            @endif
+    <!-- Success Message Alert -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-            <!-- Create Task Form -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900">
-                    <h3 class="font-semibold text-lg mb-4">Create New Task</h3>
-                    <form method="POST" action="{{ route('tasks.store') }}">
-                        @csrf
-                        <!-- Title -->
-                        <div class="mb-4">
-                            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
-                            <input type="text" name="title" id="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                        </div>
-                        <!-- Description -->
-                        <div class="mb-4">
-                            <label for="description" class="block text-gray-700 text-sm font-bold mb-2">Description (Optional):</label>
-                            <textarea name="description" id="description" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                        </div>
-                        <!-- Deadline -->
-                        <div class="mb-4">
-                            <label for="deadline" class="block text-gray-700 text-sm font-bold mb-2">Deadline (Optional):</label>
-                            <input type="date" name="deadline" id="deadline" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        </div>
-                        <!-- Submit Button -->
-                        <div class="flex items-center justify-between">
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                Add Task
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <!-- Button to trigger the modal -->
+    <div class="d-flex justify-content-end mb-4">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+            Create New Task
+        </button>
+    </div>
 
-            <!-- Task List -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="font-semibold text-lg mb-4">Your Tasks</h3>
-                    <ul>
-                        @forelse ($tasks as $task)
-                            <li class="mb-4 p-4 border rounded-lg flex justify-between items-center {{ $task->status == 'completed' ? 'bg-green-50' : '' }}">
-                                <div>
-                                    <h4 class="font-bold text-lg">{{ $task->title }}</h4>
-                                    <p class="text-gray-600">{{ $task->description }}</p>
-                                    @if ($task->deadline)
-                                        <p class="text-sm text-gray-500">Deadline: {{ $task->deadline->format('M d, Y') }}</p>
-                                    @endif
-                                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full {{ $task->status == 'completed' ? 'text-green-600 bg-green-200' : 'text-yellow-600 bg-yellow-200' }}">
-                                        {{ $task->status }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center space-x-2">
+    <!-- Task List -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title h4 mb-4">Your Tasks</h2>
+            <div class="list-group">
+                @forelse ($tasks as $task)
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h5 class="mb-1 fw-bold">{{ $task->title }}</h5>
+                                <p class="mb-1 text-muted">{{ $task->description }}</p>
+                                @if ($task->deadline)
+                                    <small class="text-secondary">Deadline: {{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}</small>
+                                @endif
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="badge rounded-pill mb-2 {{ $task->status == 'completed' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                    {{ ucfirst($task->status) }}
+                                </span>
+                                <div class="btn-group" role="group">
                                     @if ($task->status == 'pending')
                                         <!-- Mark as Complete Button -->
-                                        <form method="POST" action="{{ route('tasks.update', $task) }}">
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="me-2">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">Complete</button>
+                                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
                                         </form>
                                     @endif
                                     <!-- Delete Button -->
-                                    <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Are you sure you want to delete this task?');">
+                                    <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Are you sure?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">Delete</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                 </div>
-                            </li>
-                        @empty
-                            <p>You have no tasks yet!</p>
-                        @endforelse
-                    </ul>
-                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="list-group-item">
+                        <p class="mb-0">You have no tasks yet! Use the button above to create one.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
-</x-app-layout>
+
+    <!-- Create Task Modal -->
+    <div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="createTaskModalLabel">Create a New Task</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ route('tasks.store') }}">
+                    @csrf
+                    <div class="modal-body">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" id="title" required>
+                        </div>
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" name="description" id="description" rows="3"></textarea>
+                        </div>
+                        <!-- Deadline -->
+                        <div class="mb-3">
+                            <label for="deadline" class="form-label">Deadline (Optional)</label>
+                            <input type="date" class="form-control" name="deadline" id="deadline">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-bootstrap-app-layout>
