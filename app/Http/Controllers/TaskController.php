@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\Auth;
 class TaskController extends Controller
 {
     /**
-     * Display a listing of the user's tasks.
+     * Display a listing of ALL tasks and ALL users for collaboration.
      */
     public function index()
     {
-        // Fetch all tasks, eager-loading the assigned user's name
+        // THIS IS THE KEY: Fetch ALL tasks from the database.
         $tasks = Task::with('user')->latest()->get();
 
-        // Fetch all users to populate the "assign to" dropdown for admins
+        // THIS IS THE OTHER KEY: Fetch ALL users from the database.
         $users = User::orderBy('name')->get();
 
-        // Pass tasks AND users to the dashboard view
+        // Pass all tasks and all users to the dashboard view.
         return view('dashboard', [
             'tasks' => $tasks,
             'users' => $users
