@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::resource('tasks', TaskController::class)->except(['index']);
 Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])
     ->name('tasks.update.status');
+    Route::resource('tasks', TaskController::class)->except(['index']);
 });
 
 require __DIR__.'/auth.php';
