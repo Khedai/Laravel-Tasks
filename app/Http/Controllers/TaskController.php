@@ -2,96 +2,83 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of ALL tasks and ALL users for collaboration.
-     */
     public function index()
     {
-        // THIS IS THE KEY: Fetch ALL tasks from the database.
         $tasks = Task::with('user')->latest()->get();
 
-        // THIS IS THE OTHER KEY: Fetch ALL users from the database.
-        $users = User::orderBy('name')->get();
+        $analytics = [
+            'dates' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            'interactions' => [5, 8, 7, 6, 10, 12, 9],
+            'contributors' => ['Gomo', 'Ayabonga', 'Nkanyiso'],
+            'contributions' => [12, 9, 5]
+        ];
 
-        // Pass all tasks and all users to the dashboard view.
-        return view('dashboard', [
-            'tasks' => $tasks,
-            'users' => $users
-        ]);
+        return view('dashboard', compact('tasks', 'analytics'));
     }
 
-    /**
-     * Store a newly created task in storage.
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'deadline' => 'nullable|date',
-            // 'user_id' is only required if the person submitting is an admin
-            'user_id' => 'required_if:Auth::user()->isAdmin(),true|exists:users,id',
-            // Add validation for the new fields
-            'category' => 'required|in:Work,Personal,Other',
-            'priority' => 'required|in:Low,Medium,High',
+            'assigned_to' => 'nullable|exists:user,id',
+            'priority' => 'required|in:low,medium,high',
         ]);
 
-        // If the logged-in user is an admin, they can assign the task to anyone.
-        // Otherwise, the task is assigned to the logged-in user.
-        $taskData = $validated;
-        if (!Auth::user()->isAdmin()) {
-            $taskData['user_id'] = Auth::id();
-        }
-        // Set a default status for new tasks
-        $taskData['status'] = 'Pending';
+        Task::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'priority' => $request->priority,
+            'assigned_to' => $request->assigned_to,
+            'user_id' => Auth::id(),
+            'status' => 'pending',
+        ]);
 
-        Task::create($taskData);
-
-        return redirect()->route('dashboard')->with('success', 'Task created successfully!');
+        return redirect()->route('dashboard')->with('success', 'Task created successfully.');
     }
 
-    /**
-     * Update the specified task's status.
-     */
-    /**
-     * Update the specified task's status.
-     */
-    public function updateStatus(Request $request, Task $task)
+
+
+    public function update(Request $request, Task $task)
     {
-        // Authorization
-        $user = Auth::user();
-        if (!($user && $user->isAdmin()) && Auth::id() !== $task->user_id) {
-            abort(403);
-        }
 
-        $validated = $request->validate([
-            'status' => 'required|in:Pending,In Progress,Completed',
+        $this->authorize('update', $task);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'priority' => 'required|in:low,medium,high',
         ]);
 
-        $task->update(['status' => $validated['status']]);
+        $task->update($request->only('title', 'description', 'priority'));
 
-        return redirect()->route('dashboard')->with('success', 'Task status updated!');
+        return redirect()->route('dashboard')->with('success', 'Task updated successfully.');
     }
 
-    /**
-     * Remove the specified task from storage.
-     */
+    public function updateStatus(Task $task)
+    {
+        $task->status = $task->status === 'completed' ? 'pending' : 'completed';
+        $task->save();
+
+        return redirect()->route('dashboard')->with('success', 'Task status updated.');
+    }
+
     public function destroy(Task $task)
     {
-        // Authorization: Admin can delete any task.
-        // A team member can only delete their own tasks.
-        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
-            abort(403);
-        }
-
         $task->delete();
-        return redirect()->route('dashboard')->with('success', 'Task deleted successfully!');
+        return redirect()->route('dashboard')->with('success', 'Task deleted.');
     }
+
+    public function create()
+{
+    $users = User::all();
+    return view('tasks.create', compact('users'));
+}
+
 }

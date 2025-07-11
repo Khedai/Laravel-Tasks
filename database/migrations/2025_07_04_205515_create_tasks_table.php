@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable(); // Can be empty
             $table->timestamp('deadline')->nullable(); // Can be empty
             $table->enum('status', ['pending', 'completed'])->default('pending');
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps(); // created_at and updated_at
         });
     }
