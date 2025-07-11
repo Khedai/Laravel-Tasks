@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Validation\Rule;
 class TaskController extends Controller
 {
     public function index()
@@ -22,31 +23,79 @@ class TaskController extends Controller
         return view('dashboard', compact('tasks', 'analytics'));
     }
 
+
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'assigned_to' => 'nullable|exists:user,id',
+            'assigned_to' => 'nullable|exists:users,id',
             'priority' => 'required|in:low,medium,high',
+            'deadline' => 'nullable|date',
         ]);
 
-        Task::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'priority' => $request->priority,
-            'assigned_to' => $request->assigned_to,
-            'user_id' => Auth::id(),
-            'status' => 'pending',
-        ]);
+        $taskData = $validated;
+        if (!Auth::user()->isAdmin()) {
+            $taskData['user_id'] = Auth::id();
+        }
+        $taskData['status'] = 'Pending';
+        $taskData['creator_id'] = Auth::id();
+
+        Task::create($taskData);
 
         return redirect()->route('dashboard')->with('success', 'Task created successfully.');
     }
 
+    /**
+     * Show the form for editing the specified task.
+     */
+    public function edit(Task $task)
+    {
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
+        }
 
+        return view('tasks.edit', [
+            'task' => $task,
+            'users' => User::orderBy('name')->get()
+        ]);
+    }
 
+    /**
+     * Update the specified task in storage.
+     */
     public function update(Request $request, Task $task)
     {
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'deadline' => 'nullable|date',
+            'user_id' => [
+                Rule::requiredIf(Auth::user()->isAdmin()),
+                'exists:users,id'
+            ],
+            'priority' => 'required|in:Low,Medium,High',
+            'status' => 'required|in:Pending,In Progress,Completed',
+        ]);
+
+        $task->update($validated);
+
+        return redirect()->route('dashboard')->with('success', 'Task updated successfully!');
+    }
+
+    /**
+     * Update the specified task's status.
+     */
+    public function updateStatus(Request $request, Task $task)
+    {
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
+        }
+
 
         $this->authorize('update', $task);
 
@@ -66,14 +115,21 @@ class TaskController extends Controller
         $task->status = $task->status === 'completed' ? 'pending' : 'completed';
         $task->save();
 
-        return redirect()->route('dashboard')->with('success', 'Task status updated.');
+
+        return back()->with('success', 'Task status updated!');
+
     }
 
     public function destroy(Task $task)
     {
+        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
+            abort(403);
+        }
+
         $task->delete();
         return redirect()->route('dashboard')->with('success', 'Task deleted.');
     }
+
 
     public function create()
 {
@@ -82,3 +138,6 @@ class TaskController extends Controller
 }
 
 }
+
+
+
