@@ -9,15 +9,22 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // IMPORTANT: Change this to the email of the user you want to make an admin.
-        $user = User::where('email', 'levi@gmail.com')->first();
+        // List of emails to make admin
+        $adminEmails = [
+            'gomo@gmail.com',
+            'simnikiwe@gmail.com',
+            'levi@gmail.com',
+        ];
 
-        if ($user) {
-            $user->role = 'admin';
-            $user->save();
-            $this->command->info('Admin user updated successfully.');
-        } else {
-            $this->command->error('User with that email not found.');
+        foreach ($adminEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $user->role = 'admin';
+                $user->save();
+                $this->command->info("Admin user updated successfully: $email");
+            } else {
+                $this->command->error("User with email $email not found.");
+            }
         }
     }
 }
