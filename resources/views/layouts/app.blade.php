@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
+    
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -55,7 +55,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-=======
+    
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -97,4 +97,4 @@
     </div>
 </body>
 </html>
->>>>>>> b0c6025cb8cfc661f878a0588533fb362b5d0507
+    

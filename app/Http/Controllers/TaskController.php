@@ -87,28 +87,6 @@ class TaskController extends Controller
         return redirect()->route('dashboard')->with('success', 'Task updated successfully!');
     }
 
-    /**
-     * Update the specified task's status.
-     */
-    public function updateStatus(Request $request, Task $task)
-    {
-        if (!Auth::user()->isAdmin() && Auth::id() !== $task->user_id) {
-            abort(403);
-        }
-
-
-        $this->authorize('update', $task);
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'priority' => 'required|in:low,medium,high',
-        ]);
-
-        $task->update($request->only('title', 'description', 'priority'));
-
-        return redirect()->route('dashboard')->with('success', 'Task updated successfully.');
-    }
 
     public function updateStatus(Task $task)
     {

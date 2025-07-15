@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<<<<<<< HEAD
+    
 <div class="container">
     <h2 class="mb-3">Edit Task</h2>
 
@@ -55,7 +55,7 @@
     </form>
 </div>
 @endsection
-=======
+    
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div class="bg-white shadow-xl rounded-lg overflow-hidden">
@@ -169,4 +169,4 @@
     </div>
 </div>
 @endsection
->>>>>>> b0c6025cb8cfc661f878a0588533fb362b5d0507
+    

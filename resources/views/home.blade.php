@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-<<<<<<< HEAD
+    
     <title>MyProject</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -77,7 +77,7 @@
         </div>
     </div>
 
-=======
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager - Organize Your Work</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -214,7 +214,7 @@
             });
         });
     </script>
->>>>>>> b0c6025cb8cfc661f878a0588533fb362b5d0507
+    
 </body>
 
 </html>
