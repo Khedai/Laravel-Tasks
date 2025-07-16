@@ -16,9 +16,13 @@
         .assigned-badge { background: #007bff; color: white; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: .8rem; }
         .card { border-radius: .75rem; box-shadow: 0 .25rem .5rem rgba(0,123,255,0.05); position: relative; }
         .priority-badge { position: absolute; bottom: .75rem; right: .75rem; padding: .5rem .75rem; border-radius: 5px; font-weight: bold;  }
-        .priority-high { background: #f8d7da; color: #721c24; }
-        .priority-medium { background: #fff3cd; color: #856404; }
-        .priority-low { background: #d4edda; color: #155724; }
+        .priority-high { background: #dc3545; color: white; }
+        .priority-medium { background: #d8b652; color: rgb(129, 129, 129); }
+        .priority-low { background: #28a745; color: white; }
+        .priority-dropdown .dropdown-item:hover { color: white; }
+        .priority-dropdown .dropdown-item.high:hover { background: #dc3545; }
+        .priority-dropdown .dropdown-item.medium:hover { background: #ffc107; }
+        .priority-dropdown .dropdown-item.low:hover { background: #28a745; }
         .nav-tabs .nav-link.active { background: #007bff; color: #fff; }
     </style>
 </head>
@@ -80,7 +84,43 @@
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </div>
-                            <span class="priority-badge {{ $pclass }}">{{ $plabel }}</span>
+                            <div class="dropdown priority-dropdown">
+                                <button class="priority-badge {{ $pclass }} dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    {{ $plabel }}
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="d-inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="title" value="{{ $task->title }}">
+                                            <input type="hidden" name="description" value="{{ $task->description }}">
+                                            <input type="hidden" name="status" value="{{ $task->status }}">
+                                            <button type="submit" name="priority" value="high" class="dropdown-item high">High Priority</button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="d-inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="title" value="{{ $task->title }}">
+                                            <input type="hidden" name="description" value="{{ $task->description }}">
+                                            <input type="hidden" name="status" value="{{ $task->status }}">
+                                            <button type="submit" name="priority" value="medium" class="dropdown-item medium">Medium Priority</button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ route('tasks.update', $task) }}" class="d-inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="title" value="{{ $task->title }}">
+                                            <input type="hidden" name="description" value="{{ $task->description }}">
+                                            <input type="hidden" name="status" value="{{ $task->status }}">
+                                            <button type="submit" name="priority" value="low" class="dropdown-item low">Low Priority</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
