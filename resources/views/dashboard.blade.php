@@ -64,7 +64,15 @@
             <div class="row row-cols-1 row-cols-md-2 g-4">
                 @foreach($tasks as $task)
                     @php
+                        // Priority mapping array:
+                        // - Keys: priority levels (high, medium, low)
+                        // - Values: Arrays containing [label, CSS class]
+                        // This helps maintain consistent styling and labels across the application
                         $pm = ['high'=>['HP','priority-high'], 'medium'=>['MP','priority-medium'], 'low'=>['LP','priority-low']];
+                        
+                        // Destructure the priority mapping to get the label and CSS class
+                        // $plabel will be used for display (HP, MP, LP)
+                        // $pclass will be used for styling (priority-high, priority-medium, priority-low)
                         [$plabel,$pclass] = $pm[strtolower($task->priority)];
                     @endphp
                     <div class="col">
@@ -185,8 +193,12 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>    <script>
+    // Analytics data from the backend for chart generation
+    // interactions: Daily count of task interactions
+    // dates: Corresponding dates for the interaction data
+    // contributors: List of users who have contributed
+    // contributions: Number of tasks completed by each contributor
     const interactions = @json($analytics['interactions']);
     const dates = @json($analytics['dates']);
     const contributors = @json($analytics['contributors']);
